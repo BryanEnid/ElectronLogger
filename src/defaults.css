@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap');
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  color: white;
+  font-family: 'Roboto Mono', sans-serif;
+}
+
+.titlebar {
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+}
+
+.titlebar-button {
+  -webkit-app-region: no-drag;
+}
+
+.sc3::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.sc3::-webkit-scrollbar-track {
+  background-color: transparent;
+  border-radius: 10px;
+}
+.sc3::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+}
