@@ -21,7 +21,8 @@
   },
   "scripts": {
     "react": "react-scripts start",
-    "server": "nodemon backend/ws.js",
+    "server": "node backend/ws.js",
+    "server:dev": "nodemon backend/ws.js",
     "start": "electron .",
     "build": "react-scripts build",
     "test": "react-scripts test",

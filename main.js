@@ -1,7 +1,6 @@
-const electron = require('electron');
+const { app, ipcMain } = require('electron');
 const { BrowserWindow } = require('electron-acrylic-window');
 
-const app = electron.app;
 // Module to create native browser window.
 // const BrowserWindow = electron.BrowserWindow;
 // const path = require('path');
@@ -9,6 +8,9 @@ const app = electron.app;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
+/**
+ * @type { BrowserWindow }
+ */
 let mainWindow;
 
 const vibrancy = {
@@ -22,12 +24,17 @@ const vibrancy = {
 function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 600,
+    width: 1200,
     height: 800,
-    // autoHideMenuBar: false,
+    autoHideMenuBar: false,
     backgroundColor: '#2E3440',
-    // frame: false,
-    // opacity: 0.9,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+    },
+    minWidth: 600,
     vibrancy,
   });
 
@@ -48,4 +55,16 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (mainWindow === null) createWindow();
+});
+
+ipcMain.on('close', () => {
+  mainWindow.close();
+});
+
+ipcMain.on('minimize', () => {
+  mainWindow.minimize();
+});
+
+ipcMain.on('maximize', (e) => {
+  mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
 });

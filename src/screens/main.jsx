@@ -6,11 +6,12 @@ import Fab from '@mui/material/Fab';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { TitleBar } from '../components/TitleBar';
 import { toJSON, fromJSON, stringify, parse } from 'flatted';
+import { useWebsocket } from '../hooks/useWebsocket';
+import { JsonVisualizer } from '../components/JsonVisualizer';
 
 const TITLE_BAR_H = 42;
-const websocket_enabled = true;
 
-const test = new Array(10).fill({
+const test = new Array(20).fill({
   string: 'this is a test string',
   integer: 42,
   array: [1, 2, 3, 'test', null],
@@ -28,61 +29,34 @@ const test = new Array(10).fill({
 });
 
 export const Main = () => {
-  const [history, setHistory] = React.useState([]);
-  const scroll = React.useRef(null);
+  const [history, setHistory] = React.useState([...test]);
+  const scroll = React.useRef();
+  const bottomRef = React.useRef();
+  useWebsocket({
+    onMessage: async (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        setHistory((o) => [...o, data]);
+        scrollToBottom();
+      } catch (e) {
+        setHistory((o) => [...o, e.data]);
+      }
+    },
+  });
 
-  const log = (obj) => setHistory((x) => [...x, obj]);
+  const scrollToBottom = () => {
+    bottomRef.current.scrollIntoView();
+  };
 
-  // Websocket event listeners
-  React.useEffect(() => {
-    if (websocket_enabled) {
-      const socket = new WebSocket('ws://localhost:4444');
-      const controller = new AbortController();
-      socket.addEventListener('open', () => console.log('[connected]'), {
-        signal: controller.signal,
-      });
-      socket.addEventListener(
-        'message',
-        (e) => {
-          let data = e.data;
-          if (typeof e.data !== 'string') data = JSON.parse(e.data);
-          setHistory((o) => [...o, data]);
-        },
-        { signal: controller.signal }
-      );
+  const handleToggle = (e) => {
+    if (e.index + 1 === history.length && e.index) scrollToBottom();
+  };
 
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      return () => {
-        controller.abort();
-      };
-    }
-  }, []);
-
-  //   React.useEffect(() => {
-  //     // console.log(scroll);
-  //     // const x = JSON.parse(stringify(scroll));
-  //     // log(JSON.parse(stringify(scroll)));
-  //     console.log(scroll);
-  //     console.log(RecursiveMap.toJSON(scroll));
-  //     log('here');
-  //     log('again?');
-  //     // log(parse(stringify(scroll)));
-  //     // console.log();
-  //     // log(scroll);
-  //     // log(scroll);
-  //     // const res = JSON.stringify(scroll.current);
-  //     // log(res);
-
-  //     return () => {
-  //       setHistory([]);
-  //     };
-  //   }, [scroll]);
-
-  const Block = ({ children }) => {
+  const Block = ({ children, onToggle }) => {
     return <Box sx={{ borderBottom: '1px solid #4C566A', py: 2, px: 2 }}>{children}</Box>;
   };
 
-  if (!history.length) return <></>; // TODO: watermark
+  // if (!history.length) return <></>; // TODO: watermark
 
   return (
     <>
@@ -107,42 +81,17 @@ export const Main = () => {
               </Block>
             );
           return (
-            <Block key={index}>
-              <ReactJson
-                name={String(typeof item)}
-                iconStyle="circle"
-                displayDataTypes={false}
-                indentWidth={7}
-                displayObjectSize={false}
-                style={{ fontSize: 15, fontFamily: 'Roboto Mono', lineHeight: '120%' }}
-                theme={{
-                  base00: 'transparent',
-                  base01: '#ddd',
-                  base02: '#4C566A', // Gray
-                  base03: 'white', // ???
-                  base04: 'white', // ???
-                  base05: 'red', // ???
-                  base06: 'red', // ???
-                  base07: '#FFA59B', // RED
-                  base08: 'white',
-                  base09: '#BEFFB4', // GREEN
-                  base0A: 'white',
-                  base0B: '#FFBC32', // Orange
-                  base0C: '#4C566A', // Gray
-                  base0D: 'white',
-                  base0E: '#88C0D0', // Blue
-                  base0F: '#FFBC32',
-                }}
-                src={item}
-              />
+            <Block key={index} onToggle={handleToggle}>
+              <JsonVisualizer index={index} json={item} onToggle={handleToggle} />
             </Block>
           );
         })}
+        <div ref={bottomRef} />
       </Box>
 
       <Box sx={{ position: 'fixed', bottom: 0, right: 0, margin: 5 }}>
         <Fade in={true}>
-          <Fab color="secondary">
+          <Fab onClick={scrollToBottom} color="secondary">
             <KeyboardArrowDownIcon color={'text'} />
           </Fab>
         </Fade>
